@@ -84,7 +84,13 @@ const AdminConfirmaciones = () => {
           <p>Gestión de asistencias para la graduación de parvularia</p>
           <button
             className="btn-volver-invitacion"
-            onClick={() => window.navigateTo('/')}
+            onClick={() => {
+              if (window.navigateTo) {
+                window.navigateTo('/');
+              } else {
+                window.location.href = '/';
+              }
+            }}
           >
             ← Volver a la Invitación
           </button>

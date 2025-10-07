@@ -45,7 +45,13 @@ module.exports = {
       directory: path.join(__dirname, 'public'),
       publicPath: '/'
     },
-    historyApiFallback: true,
+    historyApiFallback: {
+      disableDotRule: true,
+      rewrites: [
+        { from: /^\/admin/, to: '/index.html' },
+        { from: /./, to: '/index.html' }
+      ]
+    },
     hot: true,
     port: 3000,
     open: true

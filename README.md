@@ -147,7 +147,6 @@ La aplicación incluye un sistema de confirmación de asistencia que utiliza **a
 
 - `src/components/ModalConfirmacion.js` - Modal de confirmación
 - `src/components/AdminConfirmaciones.js` - Panel administrativo completo
-- `src/components/ListaConfirmaciones.js` - Lista y gestión de confirmaciones
 - `confirmaciones.txt` - Se crea automáticamente en localStorage
 
 ### Características del sistema:
@@ -169,6 +168,35 @@ El panel administrativo (`/admin`) incluye:
 - **🗑️ Gestión individual** - Eliminar confirmaciones específicas
 - **📥 Exportación** - Descargar archivo TXT completo
 - **🔄 Actualización** - Refrescar datos en tiempo real
+
+## 🌐 Despliegue en Vercel
+
+Para que las rutas funcionen correctamente en Vercel, se han incluido archivos de configuración:
+
+### Configuración automática:
+
+- ✅ **`vercel.json`** - Configuración de rewrites para SPA
+- ✅ **`public/_redirects`** - Archivo de redirección alternativo
+- ✅ **History API Fallback** - Configurado en webpack
+
+### Si tienes problemas con la ruta `/admin`:
+
+1. **Verifica que los archivos estén en la raíz:**
+   ```
+   tu-proyecto/
+   ├── vercel.json
+   └── public/
+       └── _redirects
+   ```
+
+2. **Redeploy en Vercel:**
+   - Ve al dashboard de Vercel
+   - Haz clic en "Redeploy" en tu proyecto
+   - Los archivos de configuración se aplicarán automáticamente
+
+3. **URLs que funcionarán:**
+   - `https://tu-app.vercel.app/` - Página principal
+   - `https://tu-app.vercel.app/admin` - Panel administrativo
 
 **Nota:** Este sistema utiliza localStorage del navegador. Para persistencia permanente, considera implementar un backend o servicio de almacenamiento en la nube.
 

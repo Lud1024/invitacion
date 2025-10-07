@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
+// Configuración de Google Sheets - TU URL REAL DEL DESPLIEGUE
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbysGi1hYCIOsSyqHeZ4oB4GMA8IOYvJ6a82j5Rhudz0mezY6HoyQfxEx8SJjM36XNj2Pw/exec';
+
 const AdminConfirmaciones = () => {
   const [confirmaciones, setConfirmaciones] = useState([]);
   const [showLista, setShowLista] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Función para leer confirmaciones del localStorage
   const leerConfirmaciones = () => {
@@ -12,6 +16,40 @@ const AdminConfirmaciones = () => {
     } catch (error) {
       console.error('Error leyendo confirmaciones:', error);
       return [];
+    }
+  };
+
+  // Función para obtener datos de Google Sheets
+const obtenerDatosDeGoogleSheets = async () => {
+  try {
+    const resp = await fetch(GOOGLE_SHEET_URL, { method: 'GET' });
+    const data = await resp.json();         // <- directo a JSON
+
+    if (data.ok && Array.isArray(data.confirmaciones)) {
+      return data.confirmaciones.map(c => `${c.nombre} - ${c.timestamp}`);
+    }
+
+    // Respaldo local
+    return leerConfirmaciones();
+  } catch (e) {
+    console.error('Error obteniendo datos de Google Sheets:', e);
+    return leerConfirmaciones();
+  }
+};
+
+
+  // Función para sincronizar datos
+  const sincronizarDatos = async () => {
+    try {
+      setIsLoading(true);
+      const datosRemotos = await obtenerDatosDeGoogleSheets();
+      setConfirmaciones(datosRemotos);
+      alert(`Sincronizados: ${datosRemotos.length} confirmaciones`);
+    } catch (error) {
+      console.error('Error sincronizando:', error);
+      alert('Error al sincronizar datos');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,12 +165,10 @@ const AdminConfirmaciones = () => {
           </button>
           <button
             className="btn-refresh"
-            onClick={() => {
-              const confirmar = leerConfirmaciones();
-              setConfirmaciones(confirmar);
-            }}
+            onClick={sincronizarDatos}
+            disabled={isLoading}
           >
-            🔄 Actualizar
+            {isLoading ? '🔄 Sincronizando...' : '🔄 Sincronizar con Nube'}
           </button>
         </div>
       </section>

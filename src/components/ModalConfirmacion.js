@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
-const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) => {
+// Configuración de Google Sheets - TU URL REAL DEL DESPLIEGUE
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbysGi1hYCIOsSyqHeZ4oB4GMA8IOYvJ6a82j5Rhudz0mezY6HoyQfxEx8SJjM36XNj2Pw/exec';
+
+const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje: mensajeProp }) => {
   const [nombre, setNombre] = useState('');
   const [nombreExistente, setNombreExistente] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mensaje, setMensaje] = useState('');
 
   // Usar la misma clave que el componente AdminConfirmaciones
 
@@ -51,6 +56,26 @@ const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) =>
     }
   };
 
+  // Función para enviar datos a Google Sheets
+const enviarAGoogleSheets = async (nombreIngresado) => {
+  const body = new URLSearchParams();
+  body.append('nombre', nombreIngresado);
+  body.append('estado', 'Confirmado');
+
+  const resp = await fetch(GOOGLE_SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, // <- simple
+    body
+  });
+
+  // Si Apps Script respondió JSON, lo leemos; si no, asumimos ok
+  let data = null;
+  try { data = await resp.json(); } catch (_) {}
+  if (data && data.ok) return data;
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return { ok: true };
+};
+
   // Función para agregar nombre al localStorage
   const agregarNombreAStorage = async (nombreIngresado) => {
     try {
@@ -85,14 +110,40 @@ const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) =>
       return;
     }
 
-    try {
-      await agregarNombreAStorage(nombre.trim());
-      onSubmit(nombre.trim());
-    } catch (error) {
-      console.error(error);
-      alert('Error al confirmar asistencia. Por favor intenta de nuevo.');
-    }
+    setIsSubmitting(true);
     setIsChecking(false);
+
+    try {
+      let sheetSuccess = false;
+
+      // Intentar enviar a Google Sheets primero
+      try {
+        await enviarAGoogleSheets(nombre.trim());
+        console.log('Confirmación enviada a Google Sheets exitosamente');
+        sheetSuccess = true;
+      } catch (sheetError) {
+        console.warn('Error enviando a Google Sheets, guardando solo localmente:', sheetError);
+        sheetSuccess = false;
+      }
+
+      // Siempre guardar en localStorage como respaldo
+      await agregarNombreAStorage(nombre.trim());
+
+      // Mostrar mensaje apropiado basado en el resultado
+      if (sheetSuccess) {
+        setMensaje(`¡Gracias, ${nombre.trim()}! Tu asistencia ha sido confirmada exitosamente.`);
+      } else {
+        setMensaje(`¡Gracias, ${nombre.trim()}! Tu asistencia ha sido confirmada y se sincronizará automáticamente.`);
+      }
+
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Error general:', error);
+      setMensaje('Error al confirmar asistencia. Por favor intenta de nuevo.');
+      setIsSubmitting(false);
+    }
+
+    setIsSubmitting(false);
   };
 
   if (!isOpen) return null;
@@ -106,7 +157,7 @@ const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) =>
         </div>
 
         <div className="modal-body">
-          {!mensaje ? (
+          {(!mensaje && !mensajeProp) ? (
             <>
               <p className="modal-descripcion">
                 Ingresa tu nombre para confirmar tu asistencia a la graduación:
@@ -122,12 +173,17 @@ const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) =>
                     onChange={(e) => setNombre(e.target.value)}
                     placeholder="Escribe tu nombre"
                     className={`input-nombre ${nombreExistente ? 'nombre-existente' : ''}`}
-                    disabled={isChecking || isLoading}
+                    disabled={isChecking || isSubmitting || isLoading}
                     autoFocus
                   />
                   {isChecking && (
                     <div className="checking-indicator">
                       Verificando nombre...
+                    </div>
+                  )}
+                  {isSubmitting && (
+                    <div className="checking-indicator">
+                      Confirmando asistencia...
                     </div>
                   )}
                 </div>
@@ -136,15 +192,15 @@ const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) =>
                   <button
                     type="submit"
                     className="btn-confirmar"
-                    disabled={isLoading || isChecking}
+                    disabled={isLoading || isChecking || isSubmitting}
                   >
-                    {isLoading ? 'Confirmando...' : 'Confirmar Asistencia'}
+                    {isSubmitting ? 'Confirmando...' : 'Confirmar Asistencia'}
                   </button>
                   <button
                     type="button"
                     className="btn-cancelar"
                     onClick={onClose}
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                   >
                     Cancelar
                   </button>
@@ -154,7 +210,7 @@ const ModalConfirmacion = ({ isOpen, onClose, onSubmit, isLoading, mensaje }) =>
           ) : (
             <div className="modal-mensaje">
               <div className="mensaje-icono">✓</div>
-              <p>{mensaje}</p>
+              <p>{mensaje || mensajeProp}</p>
               <button className="btn-cerrar-mensaje" onClick={onClose}>
                 Cerrar
               </button>

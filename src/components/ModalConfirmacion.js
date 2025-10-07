@@ -79,7 +79,11 @@ const enviarAGoogleSheets = async (nombreIngresado) => {
   // Función para agregar nombre al localStorage
   const agregarNombreAStorage = async (nombreIngresado) => {
     try {
-      const timestamp = new Date().toLocaleString('es-GT');
+      const timestamp = new Date().toLocaleDateString('es-GT', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '/');
       const nuevaConfirmacion = `${nombreIngresado} - ${timestamp}`;
 
       const confirmaciones = leerConfirmaciones();

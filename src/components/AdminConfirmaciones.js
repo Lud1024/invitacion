@@ -7,12 +7,39 @@ const AdminConfirmaciones = () => {
   const [confirmaciones, setConfirmaciones] = useState([]);
   const [showLista, setShowLista] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+// Formatea la fecha para mostrarla como DD/MM/YYYY
+const formatearFecha = (fechaString) => {
+  const fecha = new Date(fechaString);
+  return fecha.toLocaleDateString('es-GT', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+
+
 
   // Función para leer confirmaciones del localStorage
   const leerConfirmaciones = () => {
     try {
       const datos = localStorage.getItem('confirmaciones.txt');
-      return datos ? datos.split('\n').filter(linea => linea.trim()) : [];
+      if (!datos) return [];
+
+      const confirmaciones = datos.split('\n').filter(linea => linea.trim());
+
+      // Formatear las fechas existentes al nuevo formato
+      return confirmaciones.map(conf => {
+        const partes = conf.split(' - ');
+        if (partes.length === 2) {
+          const [nombre, fecha] = partes;
+          const fechaFormateada = formatearFecha(fecha);
+          return `${nombre} - ${fechaFormateada}`;
+        }
+        return conf;
+      });
     } catch (error) {
       console.error('Error leyendo confirmaciones:', error);
       return [];
@@ -44,10 +71,16 @@ const obtenerDatosDeGoogleSheets = async () => {
       setIsLoading(true);
       const datosRemotos = await obtenerDatosDeGoogleSheets();
       setConfirmaciones(datosRemotos);
-      alert(`Sincronizados: ${datosRemotos.length} confirmaciones`);
+
+      // Mostrar modal de éxito
+      setModalMessage(`✅ Sincronización exitosa\n\nSe han cargado ${datosRemotos.length} confirmaciones desde la nube.`);
+      setShowModal(true);
     } catch (error) {
       console.error('Error sincronizando:', error);
-      alert('Error al sincronizar datos');
+
+      // Mostrar modal de error
+      setModalMessage('❌ Error de sincronización\n\nNo se pudieron cargar los datos remotos. Se muestran los datos locales disponibles.');
+      setShowModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -59,8 +92,20 @@ const obtenerDatosDeGoogleSheets = async () => {
       try {
         const confirmaciones = leerConfirmaciones();
         confirmaciones.splice(index, 1);
-        localStorage.setItem('confirmaciones.txt', confirmaciones.join('\n'));
-        setConfirmaciones(confirmaciones);
+
+        // Reformatear fechas antes de guardar
+        const confirmacionesFormateadas = confirmaciones.map(conf => {
+          const partes = conf.split(' - ');
+          if (partes.length === 2) {
+            const [nombre, fecha] = partes;
+            const fechaFormateada = formatearFecha(fecha);
+            return `${nombre} - ${fechaFormateada}`;
+          }
+          return conf;
+        });
+
+        localStorage.setItem('confirmaciones.txt', confirmacionesFormateadas.join('\n'));
+        setConfirmaciones(confirmacionesFormateadas);
         alert('Confirmación eliminada exitosamente.');
       } catch (error) {
         console.error('Error eliminando confirmación:', error);
@@ -82,6 +127,7 @@ const obtenerDatosDeGoogleSheets = async () => {
       }
     }
   };
+
 
   // Función para exportar confirmaciones a archivo TXT
   const exportarConfirmaciones = () => {
@@ -120,12 +166,6 @@ const obtenerDatosDeGoogleSheets = async () => {
         <div className="admin-header-content">
           <h1>🎓 Panel de Administración - Confirmaciones</h1>
           <p>Gestión de asistencias para la graduación de parvularia</p>
-          <button
-            className="btn-volver-invitacion"
-            onClick={() => window.location.hash = '#/'}
-          >
-            ← Volver a la Invitación
-          </button>
         </div>
       </header>
 
@@ -140,7 +180,11 @@ const obtenerDatosDeGoogleSheets = async () => {
             <h3>Fecha de Última Confirmación</h3>
             <p className="stat-text">
               {confirmaciones.length > 0
-                ? confirmaciones[confirmaciones.length - 1].split(' - ')[1] || 'N/A'
+                ? (() => {
+                    const ultimaConfirmacion = confirmaciones[confirmaciones.length - 1];
+                    const fecha = ultimaConfirmacion.split(' - ')[1];
+                    return formatearFecha(fecha) || 'N/A';
+                  })()
                 : 'Sin confirmaciones'
               }
             </p>
@@ -151,18 +195,6 @@ const obtenerDatosDeGoogleSheets = async () => {
       {/* Controles de administración */}
       <section className="admin-controls">
         <div className="controls-container">
-          <button
-            className="btn-exportar-admin"
-            onClick={exportarConfirmaciones}
-          >
-            📥 Exportar a TXT
-          </button>
-          <button
-            className="btn-limpiar-admin"
-            onClick={limpiarTodasConfirmaciones}
-          >
-            🗑️ Limpiar Todas
-          </button>
           <button
             className="btn-refresh"
             onClick={sincronizarDatos}
@@ -178,8 +210,7 @@ const obtenerDatosDeGoogleSheets = async () => {
         <div className="table-container">
           {confirmaciones.length === 0 ? (
             <div className="no-data">
-              <p>📋 Aún no hay confirmaciones de asistencia.</p>
-              <p>Comparte la invitación para comenzar a recibir confirmaciones.</p>
+              
             </div>
           ) : (
             <div className="table-wrapper">
@@ -222,6 +253,31 @@ const obtenerDatosDeGoogleSheets = async () => {
           )}
         </div>
       </section>
+
+      {/* Modal de sincronización */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content sync-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>📊 Sincronización</h3>
+              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="sync-message">
+                <pre>{modalMessage}</pre>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="btn-aceptar"
+                  onClick={() => setShowModal(false)}
+                >
+                  Aceptar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const AdminConfirmaciones = () => {
   const [confirmaciones, setConfirmaciones] = useState([]);
   const [showLista, setShowLista] = useState(true);
-  const navigate = useNavigate();
 
   // Función para leer confirmaciones del localStorage
   const leerConfirmaciones = () => {
@@ -86,7 +84,7 @@ const AdminConfirmaciones = () => {
           <p>Gestión de asistencias para la graduación de parvularia</p>
           <button
             className="btn-volver-invitacion"
-            onClick={() => navigate('/')}
+            onClick={() => window.location.hash = '#/'}
           >
             ← Volver a la Invitación
           </button>

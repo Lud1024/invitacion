@@ -1,37 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Invitacion from './components/Invitacion';
 import AdminConfirmaciones from './components/AdminConfirmaciones';
 import './styles/main.css';
 
-// Simple routing basado en URL
-const getCurrentPage = () => {
-    const path = window.location.pathname;
-    return path === '/admin' ? 'admin' : 'invitacion';
-};
-
-const renderPage = () => {
-    const page = getCurrentPage();
-
-    if (page === 'admin') {
-        return <AdminConfirmaciones />;
-    }
-
-    return <Invitacion />;
-};
-
-// Manejar navegación programática
-window.navigateTo = (path) => {
-    window.history.pushState({}, '', path);
-    renderPage();
-};
-
-// Escuchar cambios de navegación del navegador
-window.addEventListener('popstate', renderPage);
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
-        {renderPage()}
+        <Router>
+            <Routes>
+                <Route path="/admin" element={<AdminConfirmaciones />} />
+                <Route path="/" element={<Invitacion />} />
+            </Routes>
+        </Router>
     </React.StrictMode>
 );

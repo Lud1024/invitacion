@@ -53,7 +53,7 @@ const Invitacion = () => {
       <header className="invitacion-header">
         <div className="header-content">
           <h1 className="titulo-principal"> Graduación Párvulos 3 </h1>
-          <h2 className="titulo-principal">CTS</h2>
+          <h2 className="titulo-principal">C.T.S.</h2>
           <p className="subtitulo">¡Celebrando los logros de nuestros pequeños!</p>
           <div className="decoracion"></div>
         </div>

@@ -8,17 +8,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <meta name="description" content="Invitación interactiva para graduación de párvulos - 25 de octubre, 9:00 AM en Gardens, Chiquimulilla, Santa Rosa">
+    <meta name="theme-color" content="#d4af37">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+        }
+
+        /* Fallback para navegadores antiguos */
+        #root {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
     </style>
 </head>

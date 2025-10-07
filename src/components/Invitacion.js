@@ -3,8 +3,8 @@ import Carrusel from './Carrusel';
 import Mapa from './Mapa';
 import ModalConfirmacion from './ModalConfirmacion';
 
-// Logo resuelto por Webpack desde src/assets
-const logo = new URL('../assets/logo.png', import.meta.url).href;
+// Logo importado desde assets
+import logo from '../assets/logo.png';
 
 const Invitacion = () => {
   const [isVisible, setIsVisible] = useState(false);

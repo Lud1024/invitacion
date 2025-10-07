@@ -7,7 +7,8 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
     clean: true,
-    publicPath: '/'
+    publicPath: '/',
+    assetModuleFilename: 'images/[name][ext][query]'
   },
   module: {
     rules: [
@@ -29,7 +30,7 @@ module.exports = {
         test: /\.(png|jpg|jpeg|gif|svg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'images/[name][ext]'
+          filename: 'images/[name][ext][query]'
         }
       }
     ]
@@ -37,7 +38,9 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      filename: 'index.html'
+      filename: 'index.html',
+      inject: 'body',
+      scriptLoading: 'blocking'
     })
   ],
   devServer: {
@@ -54,7 +57,8 @@ module.exports = {
     },
     hot: true,
     port: 3000,
-    open: true
+    open: true,
+    allowedHosts: 'all'
   },
   resolve: {
     extensions: ['.js', '.jsx']
